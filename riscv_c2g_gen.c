@@ -15,6 +15,7 @@
 #define CRV_IOP_OP     0x33
 #define CRV_IOP_OP32   0x3B
 #define CRV_IOP_IMM32  0x1B
+#define CRV_IOP_SYSTEM 0x73
 //############################################################################//
 //CRV_IOP_IMM
 #define CRV_F3_ADDI    0
@@ -39,6 +40,8 @@
 #define CRV_F3_AND     7
 //CRV_IOP_OP32
 #define CRV_F3_ADDSUBW 0
+//CRV_IOP_SYSTEM
+#define CRV_F3_EBREAK  0
 //############################################################################//
 #define OP_C0 0
 #define OP_C1 1
@@ -271,7 +274,11 @@ uint64_t crv_decompress_real(const uint16_t cmd)
     case 0: return crv_compose_i(CRV_IOP_IMM,0,0,CRV_F3_ADDI,0);                               //c.nop
     default:return crv_compose_i(CRV_IOP_IMM,a,a,CRV_F3_ADDI,imm_c1m0(cmd));                   //c.addi
    }
+#ifdef RV32C
+   case OPC_M1:return crv_compose_j(CRV_IOP_JAL,1,imm_c1m5(cmd));                              // c.jal
+#else
    case OPC_M1:return crv_compose_i(CRV_IOP_IMM32,a,a,CRV_F3_ADDIW,imm_c1m0(cmd));             //c.addiw
+#endif
    case OPC_M2:return crv_compose_i(CRV_IOP_IMM,0,a,CRV_F3_ADDI,imm_c1m0(cmd));                //c.li
    case OPC_M3:switch (a) {
     case 2:  return crv_compose_i(CRV_IOP_IMM,2,2,CRV_F3_ADDI,imm_c1m3(cmd));                  //c.addi16sp
@@ -314,7 +321,7 @@ uint64_t crv_decompress_real(const uint16_t cmd)
     }
     case 1:switch (b) {
      case 0:switch (a) {
-      case 0: return 0;                                                                         //c.ebreak
+      case 0: return crv_compose_i(CRV_IOP_SYSTEM,0,0,CRV_F3_EBREAK,1);                         //c.ebreak
       default:return crv_compose_i(CRV_IOP_JALR,a,1,0,0);                                       //c.jalr
      }
      default: return crv_compose_r(CRV_IOP_OP,a,b,a,CRV_F3_ADDSUB,0);                           //c.add
