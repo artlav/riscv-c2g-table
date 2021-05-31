@@ -274,7 +274,11 @@ uint64_t crv_decompress_real(const uint16_t cmd)
     case 0: return crv_compose_i(CRV_IOP_IMM,0,0,CRV_F3_ADDI,0);                               //c.nop
     default:return crv_compose_i(CRV_IOP_IMM,a,a,CRV_F3_ADDI,imm_c1m0(cmd));                   //c.addi
    }
+#ifdef RV32C
+   case OPC_M1:return crv_compose_j(CRV_IOP_JAL,1,imm_c1m5(cmd));                              // c.jal
+#else
    case OPC_M1:return crv_compose_i(CRV_IOP_IMM32,a,a,CRV_F3_ADDIW,imm_c1m0(cmd));             //c.addiw
+#endif
    case OPC_M2:return crv_compose_i(CRV_IOP_IMM,0,a,CRV_F3_ADDI,imm_c1m0(cmd));                //c.li
    case OPC_M3:switch (a) {
     case 2:  return crv_compose_i(CRV_IOP_IMM,2,2,CRV_F3_ADDI,imm_c1m3(cmd));                  //c.addi16sp
